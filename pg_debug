@@ -1,0 +1,35 @@
+#!/bin/bash
+# Open lldb for psql provided pid in separate tab of iTerm2 v3
+# Author: Alexander Korotkov <a.korotkov@postgrespro.ru>
+
+IFS=''
+
+while read line
+do
+	# Extended display off
+	if [[ $line =~ ^\ +([0-9]+) ]]; then
+		PID=${BASH_REMATCH[1]}
+		break
+	fi
+	# Extended display on
+	if [[ $line =~ ^pg_backend_pid.*\ ([0-9]+) ]]; then
+		PID=${BASH_REMATCH[1]}
+		break
+	fi
+done
+
+# Open lldb session
+osascript -e "
+tell application \"iTerm\"
+	activate
+	tell current window
+		set mytab to (the current tab)
+		create tab with default profile
+		tell current tab
+			tell current session
+				write text \"lldb -p $PID -s /usr/local/share/pg_debug.script\"
+			end tell
+		end tell
+		select mytab
+	end tell
+end tell"
